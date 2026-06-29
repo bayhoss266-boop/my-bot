@@ -1,32 +1,32 @@
-import logging
-from aiogram import Bot, Dispatcher, executor, types
+import asyncio
+from aiogram import Bot, Dispatcher, types
+from aiogram.filters import Command
 import subprocess
 
-# توکن ربات خود را اینجا قرار دهید
-API_TOKEN = '8962091539:AAHQBIHj2ZOptHTmfLKlsVS1bMBrbfGpK1A'
+# توکن خود را در اینجا قرار دهید
+API_TOKEN = '8962091539:AAHQBIHj2ZOptHTmfLk1sVS1bW8-G-6yZ0M'
 
-# تنظیمات اولیه ربات
-logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
-dp = Dispatcher(bot)
+dp = Dispatcher()
 
-@dp.message_handler()
-async def echo(message: types.Message):
-    # کدی که کاربر می‌فرستد را در متغیر code قرار می‌دهیم
+@dp.message(Command("start"))
+async def cmd_start(message: types.Message):
+    await message.answer("سلام! کد پایتون خود را بفرست تا اجرا کنم.")
+
+@dp.message()
+async def execute_code(message: types.Message):
     code = message.text
-    
     try:
-        # اجرای کد پایتون ارسالی توسط کاربر در یک محیط ایزوله
-        result = subprocess.run(['python3', '-c', code], capture_output=True, text=True, timeout=5)
-        
-        # تهیه خروجی (stdout اگر موفق بود، stderr اگر خطا داشت)
-        output = result.stdout or result.stderr or "کد خروجی خاصی نداشت."
-        
-        # ارسال پاسخ به کاربر (محدودیت ۱۰۰۰ کاراکتر برای نمایش)
-        await message.answer(f"خروجی:\n{output[:1000]}")
-        
+        # اجرای کد پایتون به صورت ایمن
+        result = subprocess.check_output(['python3', '-c', code], stderr=subprocess.STDOUT, timeout=5, text=True)
+    except subprocess.CalledProcessError as e:
+        result = e.output
     except Exception as e:
-        await message.answer(f"خطا در اجرا: {str(e)}")
+        result = str(e)
+        
+    await message.answer(f"Output:\n{result}")
 
-if __name__ == '__main__':
-    executor.start_polling(dp)
+async def main():
+    await dp.start_polling(bot)
+
+if __name
